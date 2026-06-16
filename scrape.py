@@ -173,14 +173,14 @@ def open_ig_list(driver, username, which):  # which: "followers" | "following"
     time.sleep(2.5)
 
 
-def run_instagram(driver, username, patience, pause):
-    print("\n[Instagram] takip ettiklerin toplaniyor ...")
+def run_instagram(driver, username, patience, pause, log=print):
+    log("\n[Instagram] collecting accounts you follow ...")
     open_ig_list(driver, username, "following")
-    following = harvest(driver, extract_ig, scroll_ig, patience, pause)
+    following = harvest(driver, extract_ig, scroll_ig, patience, pause, log=log)
 
-    print("\n[Instagram] seni takip edenler toplaniyor ...")
+    log("\n[Instagram] collecting your followers ...")
     open_ig_list(driver, username, "followers")
-    followers = harvest(driver, extract_ig, scroll_ig, patience, pause)
+    followers = harvest(driver, extract_ig, scroll_ig, patience, pause, log=log)
     return following, followers
 
 
@@ -210,15 +210,57 @@ def open_tw_list(driver, username, which):
     time.sleep(2.5)
 
 
-def run_twitter(driver, username, patience, pause):
-    print("\n[X] takip ettiklerin toplaniyor ...")
+def run_twitter(driver, username, patience, pause, log=print):
+    log("\n[X] collecting accounts you follow ...")
     open_tw_list(driver, username, "following")
-    following = harvest(driver, extract_tw, scroll_tw, patience, pause)
+    following = harvest(driver, extract_tw, scroll_tw, patience, pause, log=log)
 
-    print("\n[X] seni takip edenler toplaniyor ...")
+    log("\n[X] collecting your followers ...")
     open_tw_list(driver, username, "followers")
-    followers = harvest(driver, extract_tw, scroll_tw, patience, pause)
+    followers = harvest(driver, extract_tw, scroll_tw, patience, pause, log=log)
     return following, followers
+
+
+# --------------------------------------------------------------- GUI-callable entry point
+
+def collect(platform, username, profile_dir="./chrome-profile", patience=12, pause=1.6,
+            wait_for_ready=None, log=print, on_browser_open=None):
+    """Open browser, wait for the caller to confirm login, then harvest both lists.
+
+    platform        : "instagram" | "twitter"
+    wait_for_ready  : callable that blocks until the user has finished logging in.
+                      In the CLI this is input(); in the GUI it is an Event.wait().
+    on_browser_open : optional callback(driver) fired right after the browser opens
+                      (so a GUI can enable its "I'm logged in" button).
+    log             : message sink (defaults to print).
+
+    Returns (following, followers) as sorted lists of handles.
+    """
+    if platform not in ("instagram", "twitter"):
+        raise ValueError(f"unknown platform: {platform}")
+    username = username.strip().lstrip("@")
+    if not username:
+        raise ValueError("username is empty")
+
+    driver = build_driver(profile_dir)
+    try:
+        start = ("https://www.instagram.com/" if platform == "instagram"
+                 else "https://x.com/home")
+        driver.get(start)
+        log("Browser opened. Log in (2FA / checkpoint included), then continue.")
+        if on_browser_open:
+            on_browser_open(driver)
+        if wait_for_ready:
+            wait_for_ready()
+
+        runner = run_instagram if platform == "instagram" else run_twitter
+        following, followers = runner(driver, username, patience, pause, log=log)
+        return following, followers
+    finally:
+        try:
+            driver.quit()
+        except Exception:
+            pass
 
 
 # --------------------------------------------------------------- cli
@@ -242,32 +284,26 @@ def main():
     args = ap.parse_args()
 
     prefix = args.prefix or args.platform
-    driver = build_driver(args.profile_dir)
 
-    try:
-        start = "https://www.instagram.com/" if args.platform == "instagram" else "https://x.com/home"
-        driver.get(start)
+    def wait_for_ready():
         print("\n" + "=" * 60)
-        print(" Acilan tarayicida GIRIS YAP (2FA/checkpoint dahil).")
-        print(" Ana sayfayi gorunce buraya don ve ENTER'a bas.")
+        print(" LOG IN in the opened browser (2FA / checkpoint included).")
+        print(" Once you see the home page, come back here and press ENTER.")
         print("=" * 60)
-        input(" > hazir oldugunda ENTER... ")
+        input(" > press ENTER when ready... ")
 
-        runner = run_instagram if args.platform == "instagram" else run_twitter
-        following, followers = runner(driver, args.username, args.patience, args.pause)
+    following, followers = collect(
+        args.platform, args.username,
+        profile_dir=args.profile_dir, patience=args.patience, pause=args.pause,
+        wait_for_ready=wait_for_ready,
+    )
 
-        save(following, f"{prefix}_following.txt")
-        save(followers, f"{prefix}_followers.txt")
+    save(following, f"{prefix}_following.txt")
+    save(followers, f"{prefix}_followers.txt")
 
-        print("\nBitti. Simdi karsilastir:")
-        print(f"  python compare.py --following-list {prefix}_following.txt "
-              f"--followers-list {prefix}_followers.txt --platform {args.platform} --save sonuc_{prefix}")
-    finally:
-        try:
-            input("\n[tarayiciyi kapatmak icin ENTER] ")
-        except EOFError:
-            pass
-        driver.quit()
+    print("\nDone. Now compare:")
+    print(f"  python compare.py --following-list {prefix}_following.txt "
+          f"--followers-list {prefix}_followers.txt --platform {args.platform} --save result_{prefix}")
 
 
 if __name__ == "__main__":
