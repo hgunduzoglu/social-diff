@@ -1,3 +1,6 @@
 .venv/
 chrome-profile/
 __pycache__/
+result_instagram/
+instagram_followers.txt
+instagram_following.txt

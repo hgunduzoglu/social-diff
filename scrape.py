@@ -119,13 +119,18 @@ def _hrefs_in(driver, css):
     return out
 
 
-def harvest(driver, extract_fn, scroll_fn, patience=12, pause=1.6, hard_limit=5000, log=print):
+def harvest(driver, extract_fn, scroll_fn, patience=12, pause=1.6, hard_limit=5000,
+            log=print, should_stop=None):
     """extract_fn(driver) -> [handle...]; scroll_fn(driver) scrolls the list down.
-       Stops when no new users appear for `patience` consecutive rounds."""
+       Stops when no new users appear for `patience` consecutive rounds, or as soon
+       as should_stop() returns True."""
     seen = set()
     stale = 0
     rnd = 0
     while stale < patience and len(seen) < hard_limit:
+        if should_stop and should_stop():
+            log("   (stopped)")
+            break
         rnd += 1
         for h in extract_fn(driver):
             if h:
@@ -164,23 +169,47 @@ def extract_ig(driver):
     return [clean_ig_handle(h) for h in _hrefs_in(driver, 'div[role="dialog"] a[href]')]
 
 
-def open_ig_list(driver, username, which):  # which: "followers" | "following"
+def open_ig_list(driver, username, which, log=print):  # which: "followers" | "following"
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
-    driver.get(f"https://www.instagram.com/{username}/{which}/")
-    WebDriverWait(driver, 40).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'div[role="dialog"]')))
+    from selenium.common.exceptions import TimeoutException
+
+    # Land on the profile first; navigating straight to /followers/ doesn't always
+    # open the modal, but clicking the link from the profile reliably does.
+    driver.get(f"https://www.instagram.com/{username}/")
+    try:
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "main")))
+    except TimeoutException:
+        pass
+    time.sleep(2.0)
+
+    # Click the followers/following link if we can find it; otherwise fall back
+    # to the direct URL (older behaviour).
+    try:
+        link = driver.find_element(By.CSS_SELECTOR, f'a[href="/{username}/{which}/"]')
+        driver.execute_script("arguments[0].click();", link)
+    except Exception:
+        driver.get(f"https://www.instagram.com/{username}/{which}/")
+
+    try:
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'div[role="dialog"]')))
+    except TimeoutException:
+        log(f"   (warning) '{which}' dialog did not appear — "
+            f"url={driver.current_url!r}, title={driver.title!r}. "
+            f"Check the username, or that the account isn't private/blocked.")
     time.sleep(2.5)
 
 
 def run_instagram(driver, username, patience, pause, log=print):
     log("\n[Instagram] collecting accounts you follow ...")
-    open_ig_list(driver, username, "following")
+    open_ig_list(driver, username, "following", log=log)
     following = harvest(driver, extract_ig, scroll_ig, patience, pause, log=log)
 
     log("\n[Instagram] collecting your followers ...")
-    open_ig_list(driver, username, "followers")
+    open_ig_list(driver, username, "followers", log=log)
     followers = harvest(driver, extract_ig, scroll_ig, patience, pause, log=log)
     return following, followers
 
