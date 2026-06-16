@@ -1,6 +1,6 @@
 # Social Diff
 
-**Türkçe** · [English](README.en.md)
+**Türkçe** · [English](README_en.md)
 
 Instagram ve Twitter/X için takipçi–takip karşılaştırması yapıp **iki yönlü
 eşleşmeme** listesi çıkarır:
