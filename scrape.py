@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 """
-scrape.py - Instagram / Twitter(X) takipci + takip listesi toplayici (Selenium)
+scrape.py - Instagram / Twitter(X) followers + following collector (Selenium)
 
-Mantik:
-  - Tarayiciyi acar, SEN ELLE giris yaparsin (2FA / checkpoint dahil).
-  - ENTER'a basinca script profile gidip followers + following listesini
-    scroll ederek toplar ve .txt olarak yazar.
-  - Kalici Chrome profili (--profile-dir) kullanir; ikinci calistirmada zaten login'sin.
+How it works:
+  - Opens a browser; YOU log in MANUALLY (2FA / checkpoint included).
+  - Once you confirm, the script visits your profile, scrolls the followers +
+    following lists, collects the handles and writes them as .txt files.
+  - Uses a persistent Chrome profile (--profile-dir); on the second run you are
+    already logged in.
 
-Kullanim:
-  pip install selenium                 # Chrome zaten kurulu olmali (driver'i Selenium otomatik indirir)
+Usage:
+  pip install selenium                 # Chrome must be installed (Selenium downloads the driver)
 
-  python scrape.py instagram KULLANICI_ADIN
-  python scrape.py twitter   KULLANICI_ADIN
+  python scrape.py instagram YOUR_USERNAME
+  python scrape.py twitter   YOUR_USERNAME
 
-Cikti:  {platform}_following.txt  ve  {platform}_followers.txt
-        (compare.py'ye --following-list / --followers-list olarak verilebilir)
+Output:  {platform}_following.txt  and  {platform}_followers.txt
+         (pass them to compare.py as --following-list / --followers-list)
 
-NOT: ToS'a aykiridir, hesap riski sifir degildir (ozellikle IG). DOM selektorleri
-     degisebilir; biri patlarsa ilgili CSS selektorunu guncelle. Art arda cok
-     calistirma -> rate limit.
+NOTE: This violates the sites' ToS; the account risk is not zero (especially IG).
+      DOM selectors can change; if one breaks, update the relevant CSS selector.
+      Don't run it repeatedly -> rate limits.
 """
 
 import argparse
@@ -28,7 +29,7 @@ import sys
 import time
 from pathlib import Path
 
-# --------------------------------------------------------------- saf yardimcilar (test edildi)
+# --------------------------------------------------------------- pure helpers (tested)
 
 IG_RESERVED = {"explore", "reels", "reel", "p", "accounts", "direct", "stories", "tv",
                "about", "legal", "privacy", "developer", "directory", "web", "emails",
@@ -68,17 +69,17 @@ def clean_tw_handle(href):
     return u if re.fullmatch(r"[A-Za-z0-9_]{1,15}", u) else None
 
 
-# --------------------------------------------------------------- selenium kurulum
+# --------------------------------------------------------------- selenium setup
 
 def build_driver(profile_dir, headless=False):
     try:
         from selenium import webdriver
         from selenium.webdriver.chrome.options import Options
     except ImportError:
-        raise RuntimeError("selenium kurulu degil:  pip install selenium")
+        raise RuntimeError("selenium is not installed:  pip install selenium")
 
     opts = Options()
-    # bot tespitini azaltan bayraklar
+    # flags that reduce bot detection
     opts.add_argument("--disable-blink-features=AutomationControlled")
     opts.add_experimental_option("excludeSwitches", ["enable-automation"])
     opts.add_experimental_option("useAutomationExtension", False)
@@ -86,7 +87,7 @@ def build_driver(profile_dir, headless=False):
     opts.add_argument("--window-size=1280,900")
     opts.add_argument("--lang=en-US")
     if headless:
-        opts.add_argument("--headless=new")  # IG'de headless genelde checkpoint yer; onerilmez
+        opts.add_argument("--headless=new")  # headless usually triggers IG checkpoints; not recommended
 
     driver = webdriver.Chrome(options=opts)
     # navigator.webdriver = undefined
@@ -96,13 +97,13 @@ def build_driver(profile_dir, headless=False):
     )
     return driver
 
-    # IG seni yine bloklarsa: vanilla selenium yerine undetected-chromedriver dene
+    # If IG still blocks you: try undetected-chromedriver instead of vanilla selenium
     #   pip install undetected-chromedriver
     #   import undetected_chromedriver as uc
     #   driver = uc.Chrome(user_data_dir=profile_dir)
 
 
-# --------------------------------------------------------------- toplama cekirdegi
+# --------------------------------------------------------------- collection core
 
 def _hrefs_in(driver, css):
     from selenium.webdriver.common.by import By
@@ -119,8 +120,8 @@ def _hrefs_in(driver, css):
 
 
 def harvest(driver, extract_fn, scroll_fn, patience=12, pause=1.6, hard_limit=5000, log=print):
-    """extract_fn(driver) -> [handle...]; scroll_fn(driver) listeyi asagi kaydirir.
-       Yeni kullanici gelmeyi durdurunca (patience tur ust uste) biter."""
+    """extract_fn(driver) -> [handle...]; scroll_fn(driver) scrolls the list down.
+       Stops when no new users appear for `patience` consecutive rounds."""
     seen = set()
     stale = 0
     rnd = 0
@@ -192,7 +193,7 @@ def scroll_tw(driver):
 
 def extract_tw(driver):
     hrefs = _hrefs_in(driver, '[data-testid="UserCell"] a[href]')
-    if not hrefs:  # selektor degismisse genel main'e dus
+    if not hrefs:  # if the selector changed, fall back to the whole main
         hrefs = _hrefs_in(driver, 'main a[href]')
     return [clean_tw_handle(h) for h in hrefs]
 
@@ -206,7 +207,7 @@ def open_tw_list(driver, username, which):
         WebDriverWait(driver, 40).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="UserCell"]')))
     except Exception:
-        time.sleep(5)  # bos/yeni hesap olabilir
+        time.sleep(5)  # may be an empty / brand-new account
     time.sleep(2.5)
 
 
@@ -230,11 +231,13 @@ def collect(platform, username, profile_dir="./chrome-profile", patience=12, pau
     platform        : "instagram" | "twitter"
     wait_for_ready  : callable that blocks until the user has finished logging in.
                       In the CLI this is input(); in the GUI it is an Event.wait().
+                      May return False to CANCEL (browser closes, no harvest).
     on_browser_open : optional callback(driver) fired right after the browser opens
                       (so a GUI can enable its "I'm logged in" button).
     log             : message sink (defaults to print).
 
-    Returns (following, followers) as sorted lists of handles.
+    Returns (following, followers) as sorted lists of handles, or (None, None)
+    if the caller cancelled. The browser is ALWAYS closed before returning.
     """
     if platform not in ("instagram", "twitter"):
         raise ValueError(f"unknown platform: {platform}")
@@ -251,7 +254,9 @@ def collect(platform, username, profile_dir="./chrome-profile", patience=12, pau
         if on_browser_open:
             on_browser_open(driver)
         if wait_for_ready:
-            wait_for_ready()
+            if wait_for_ready() is False:
+                log("Cancelled — closing browser.")
+                return None, None
 
         runner = run_instagram if platform == "instagram" else run_twitter
         following, followers = runner(driver, username, patience, pause, log=log)
@@ -267,20 +272,20 @@ def collect(platform, username, profile_dir="./chrome-profile", patience=12, pau
 
 def save(names, path):
     Path(path).write_text("\n".join(names) + "\n", encoding="utf-8")
-    print(f"[kayit] {path}  ({len(names)} kullanici)")
+    print(f"[saved] {path}  ({len(names)} users)")
 
 
 def main():
-    ap = argparse.ArgumentParser(description="IG/Twitter takipci+takip listesi topla (Selenium).")
+    ap = argparse.ArgumentParser(description="Collect IG/Twitter followers+following lists (Selenium).")
     ap.add_argument("platform", choices=["instagram", "twitter"])
-    ap.add_argument("username", help="KENDI kullanici adin (@ olmadan)")
+    ap.add_argument("username", help="YOUR own username (without @)")
     ap.add_argument("--profile-dir", default="./chrome-profile",
-                    help="Kalici Chrome profili (login burada saklanir)")
+                    help="Persistent Chrome profile (login is stored here)")
     ap.add_argument("--patience", type=int, default=12,
-                    help="Kac tur ust uste yeni kullanici gelmezse dursun (default 12)")
+                    help="Stop after this many consecutive rounds with no new users (default 12)")
     ap.add_argument("--pause", type=float, default=1.6,
-                    help="Her scroll sonrasi bekleme saniyesi (default 1.6)")
-    ap.add_argument("--prefix", default=None, help="Cikti dosya oneki (default: platform)")
+                    help="Seconds to wait after each scroll (default 1.6)")
+    ap.add_argument("--prefix", default=None, help="Output file prefix (default: platform)")
     args = ap.parse_args()
 
     prefix = args.prefix or args.platform

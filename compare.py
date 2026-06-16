@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Karsilikli takip karsilastirma araci (Instagram / Twitter / genel).
+Mutual-follow comparison tool (Instagram / Twitter / generic).
 
-Iki listeyi karsilastirir:
-  - following : senin takip ettiklerin
-  - followers : seni takip edenler
+Compares two lists:
+  - following : the accounts you follow
+  - followers : the accounts that follow you
 
-Cikti:
-  1) Sen takip ediyorsun ama o GERI takip etmiyor   (not_following_back)
-  2) O seni takip ediyor ama sen geri takip etmiyorsun (you_dont_follow_back)
-  3) Karsilikli (mutuals) -> sadece sayi
+Output:
+  1) You follow them but they DON'T follow you back   (not_following_back)
+  2) They follow you but you DON'T follow them back    (you_dont_follow_back)
+  3) Mutuals -> count only
 
-Veri kaynaklari:
-  * Instagram resmi veri indirme (JSON): following.json + followers_1.json (followers_2.json ...)
-  * Duz metin listesi: her satirda bir kullanici adi (Twitter ya da baska bir yontemle topladiklarin)
+Data sources:
+  * Instagram official data download (JSON): following.json + followers_1.json (followers_2.json ...)
+  * Plain text list: one username per line (Twitter, or anything you collected another way)
 
-Hicbir ucuncu parti kutuphane gerektirmez (sadece Python stdlib).
+Requires no third-party libraries (Python stdlib only).
 """
 
 import argparse
@@ -27,9 +27,9 @@ from pathlib import Path
 # ---------------------------------------------------------------- parsers
 
 def _usernames_from_ig_obj(data):
-    """Instagram export'un iki bicimini de destekler:
-       - kok seviyede liste            -> followers_1.json
-       - relationships_* anahtarli dict -> following.json
+    """Supports both shapes of the Instagram export:
+       - a list at the root level           -> followers_1.json
+       - a dict keyed by relationships_*     -> following.json
     """
     if isinstance(data, dict):
         records = next((v for v in data.values() if isinstance(v, list)), [])
@@ -69,7 +69,7 @@ def load_text_list(path):
 # ---------------------------------------------------------------- core
 
 def _index(names):
-    """case-insensitive eslestirme: lowercase -> ilk gorulen orijinal isim."""
+    """case-insensitive matching: lowercase -> first-seen original spelling."""
     mapping = {}
     for n in names:
         mapping.setdefault(n.lower(), n)
@@ -95,37 +95,37 @@ def compare(following_names, follower_names):
 
 def print_report(r, platform=""):
     bar = "=" * 58
-    title = f" KARSILASTIRMA{(' - ' + platform) if platform else ''} "
+    title = f" COMPARISON{(' - ' + platform) if platform else ''} "
     print(bar)
     print(title.center(58, "="))
     print(bar)
-    print(f"Takip ettigin   : {r['following_count']}")
-    print(f"Seni takip eden : {r['followers_count']}")
-    print(f"Karsilikli      : {len(r['mutuals'])}")
+    print(f"Following : {r['following_count']}")
+    print(f"Followers : {r['followers_count']}")
+    print(f"Mutuals   : {len(r['mutuals'])}")
     print()
 
     nfb = r["not_following_back"]
-    print(f"[X] Sen takip ediyorsun, o GERI TAKIP ETMIYOR  ({len(nfb)})")
+    print(f"[X] You follow them, they DON'T follow you back  ({len(nfb)})")
     print("-" * 58)
-    print("\n".join(f"  @{u}" for u in nfb) if nfb else "  (yok)")
+    print("\n".join(f"  @{u}" for u in nfb) if nfb else "  (none)")
     print()
 
     ydf = r["you_dont_follow_back"]
-    print(f"[+] Seni takip ediyor, SEN GERI TAKIP ETMIYORSUN  ({len(ydf)})")
+    print(f"[+] They follow you, you DON'T follow them back  ({len(ydf)})")
     print("-" * 58)
-    print("\n".join(f"  @{u}" for u in ydf) if ydf else "  (yok)")
+    print("\n".join(f"  @{u}" for u in ydf) if ydf else "  (none)")
     print()
 
 
 def save_lists(r, out_dir):
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "geri_takip_etmeyenler.txt").write_text(
+    (out / "not_following_back.txt").write_text(
         "\n".join(r["not_following_back"]) + "\n", encoding="utf-8")
-    (out / "sen_takip_etmediklerin.txt").write_text(
+    (out / "you_dont_follow_back.txt").write_text(
         "\n".join(r["you_dont_follow_back"]) + "\n", encoding="utf-8")
-    print(f"[kayit] {out}/geri_takip_etmeyenler.txt")
-    print(f"[kayit] {out}/sen_takip_etmediklerin.txt")
+    print(f"[saved] {out}/not_following_back.txt")
+    print(f"[saved] {out}/you_dont_follow_back.txt")
 
 
 # ---------------------------------------------------------------- ig autodetect
@@ -142,16 +142,16 @@ def autodetect_instagram(dir_path):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Karsilikli olmayan takipleri bul (Instagram/Twitter/genel).",
+        description="Find non-mutual follows (Instagram/Twitter/generic).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    ap.add_argument("--ig-dir", help="Instagram export'taki .../followers_and_following klasoru (dosyalari otomatik bulur)")
-    ap.add_argument("--following", help="following.json yolu (Instagram)")
-    ap.add_argument("--followers", nargs="+", help="followers_1.json (ve varsa followers_2.json ...) yollari")
-    ap.add_argument("--following-list", help="Takip ettiklerin: her satirda bir kullanici adi (duz metin)")
-    ap.add_argument("--followers-list", help="Seni takip edenler: her satirda bir kullanici adi (duz metin)")
-    ap.add_argument("--platform", default="", help="Rapor basligi etiketi (Instagram / Twitter)")
-    ap.add_argument("--save", metavar="DIR", help="Sonuclari .txt olarak bu klasore kaydet")
+    ap.add_argument("--ig-dir", help="The .../followers_and_following folder from the Instagram export (auto-detects files)")
+    ap.add_argument("--following", help="Path to following.json (Instagram)")
+    ap.add_argument("--followers", nargs="+", help="Path(s) to followers_1.json (and followers_2.json ... if present)")
+    ap.add_argument("--following-list", help="Accounts you follow: one username per line (plain text)")
+    ap.add_argument("--followers-list", help="Accounts that follow you: one username per line (plain text)")
+    ap.add_argument("--platform", default="", help="Report title label (Instagram / Twitter)")
+    ap.add_argument("--save", metavar="DIR", help="Save results as .txt into this folder")
     args = ap.parse_args()
 
     following_names = follower_names = None
@@ -159,7 +159,7 @@ def main():
     if args.ig_dir:
         ff_following, ff_followers = autodetect_instagram(args.ig_dir)
         if not ff_following or not ff_followers:
-            sys.exit("Klasorde following.json / followers_*.json bulunamadi.")
+            sys.exit("Could not find following.json / followers_*.json in the folder.")
         following_names = load_instagram_json(ff_following)
         follower_names = [u for ff in ff_followers for u in load_instagram_json(ff)]
         args.platform = args.platform or "Instagram"
@@ -175,8 +175,8 @@ def main():
 
     else:
         ap.print_help()
-        sys.exit("\nHata: ya --ig-dir, ya (--following + --followers), "
-                 "ya da (--following-list + --followers-list) ver.")
+        sys.exit("\nError: provide either --ig-dir, or (--following + --followers), "
+                 "or (--following-list + --followers-list).")
 
     result = compare(following_names, follower_names)
     print_report(result, args.platform)
