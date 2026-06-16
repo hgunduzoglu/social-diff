@@ -8,6 +8,18 @@ eşleşmeme** listesi çıkarır:
 - **Don't follow you back** — sen takip ediyorsun, o seni geri takip etmiyor.
 - **You don't follow back** — o seni takip ediyor, sen onu takip etmiyorsun.
 
+## Örnek çıktı
+
+**Instagram**
+
+![Instagram örnek sonuç ekranı](assets/example-result.png)
+
+**Twitter / X**
+
+![Twitter örnek sonuç ekranı](assets/example-result-twitter.png)
+
+> Görsellerdeki kullanıcı adları tamamen uydurmadır (örnek amaçlıdır).
+
 ## Nasıl çalışır?
 
 Program adım adım ilerler ve **gezinmeyi sen yaparsın** — o sadece açtığın

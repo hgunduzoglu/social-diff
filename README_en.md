@@ -8,6 +8,18 @@ Compares followers vs. following on Instagram and Twitter/X and produces a
 - **Don't follow you back** — you follow them, they don't follow you back.
 - **You don't follow back** — they follow you, you don't follow them back.
 
+## Example output
+
+**Instagram**
+
+![Instagram example result screen](assets/example-result.png)
+
+**Twitter / X**
+
+![Twitter example result screen](assets/example-result-twitter.png)
+
+> The usernames in the images are entirely made up (for illustration only).
+
 ## How it works
 
 The program goes step by step and **you do the navigation** — it only scrolls

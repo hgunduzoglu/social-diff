@@ -318,6 +318,14 @@ class PlatformScreen(ttk.Frame):
             self.hint_var.set(self._open_hint("followers"))
             self._primary("I opened it  →  Collect followers",
                           lambda: self.on_collect("followers"), "Go.TButton")
+        elif step == "followers_done":
+            n = len(self.followers or [])
+            self.step_var.set("Step 2 / 3  ✓")
+            self.instr_var.set(f"Followers collected ({n})")
+            self.hint_var.set("When you're ready, click Next — then you'll open "
+                              "your following list and confirm.")
+            self._primary("Next  →", lambda: self._set_step("following"),
+                          "Go.TButton")
         elif step == "following":
             self.step_var.set("Step 3 / 3")
             self.instr_var.set("Open your FOLLOWING list")
@@ -425,9 +433,10 @@ class PlatformScreen(ttk.Frame):
         self.log(f"   → {len(handles)} {kind} collected.")
         if kind == "followers":
             self.followers = handles
-            self._set_step("following")
+            self.stop_btn.config(state="disabled")
+            self._set_step("followers_done")
             self.status_var.set(f"{len(handles)} followers collected. "
-                                f"Now open your following list.")
+                                f"Click Next when you're ready.")
         else:
             self.following = handles
             self._finish()
