@@ -251,6 +251,42 @@ def run_twitter(driver, username, patience, pause, log=print):
     return following, followers
 
 
+# --------------------------------------------------------------- step-by-step (manual) API
+
+def open_browser(platform, profile_dir="./chrome-profile", log=print):
+    """Open the browser on the platform's home page and return the driver.
+       The user logs in and navigates manually; harvest_open_list() does the rest."""
+    if platform not in ("instagram", "twitter"):
+        raise ValueError(f"unknown platform: {platform}")
+    driver = build_driver(profile_dir)
+    start = ("https://www.instagram.com/" if platform == "instagram"
+             else "https://x.com/home")
+    driver.get(start)
+    log("Browser opened. Log in (2FA / checkpoint included).")
+    return driver
+
+
+def harvest_open_list(driver, platform, patience=12, pause=1.6, log=print,
+                      should_stop=None):
+    """Collect handles from the followers/following list that is CURRENTLY open
+       in the browser (the user opens it manually). Returns a sorted list."""
+    if platform == "instagram":
+        extract_fn, scroll_fn = extract_ig, scroll_ig
+    else:
+        extract_fn, scroll_fn = extract_tw, scroll_tw
+    return harvest(driver, extract_fn, scroll_fn, patience, pause,
+                   log=log, should_stop=should_stop)
+
+
+def close_browser(driver):
+    if driver is None:
+        return
+    try:
+        driver.quit()
+    except Exception:
+        pass
+
+
 # --------------------------------------------------------------- GUI-callable entry point
 
 def collect(platform, username, profile_dir="./chrome-profile", patience=12, pause=1.6,
