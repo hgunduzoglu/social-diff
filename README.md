@@ -69,7 +69,6 @@ veya GitHub arayüzünden **Download ZIP** ile indirip aç.
 | `compare.py` | karşılaştırma mantığı (CLI olarak da çalışır) |
 | `run.command` / `run.bat` / `run.sh` | başlatıcılar (macOS / Windows / Linux) |
 | `build_windows.bat` / `build_mac.command` | tek dosyalık uygulama üret |
-| `Nasıl Kullanırım.txt` / `How To Use.txt` | sade kullanım kılavuzu (TR / EN) |
 
 ## Komut satırı (isteğe bağlı)
 

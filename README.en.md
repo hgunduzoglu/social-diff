@@ -69,7 +69,6 @@ or grab it from the GitHub interface via **Download ZIP** and unzip.
 | `compare.py` | comparison logic (also usable from the CLI) |
 | `run.command` / `run.bat` / `run.sh` | launchers (macOS / Windows / Linux) |
 | `build_windows.bat` / `build_mac.command` | build standalone apps |
-| `How To Use.txt` / `Nasıl Kullanırım.txt` | plain usage guide (EN / TR) |
 
 ## Command-line (optional)
 
