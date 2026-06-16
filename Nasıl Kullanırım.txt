@@ -1,0 +1,80 @@
+============================================================
+ SOCIAL DIFF — NASIL KULLANIRIM
+============================================================
+
+Ne işe yarar:
+  Instagram ve Twitter/X'te takipçilerini ve takip ettiklerini
+  karşılaştırır, iki liste çıkarır:
+    - Don't follow you back  (sen takip ediyorsun, o seni etmiyor)
+    - You don't follow back  (o seni takip ediyor, sen onu etmiyorsun)
+
+Başlamadan önce:
+  - Google Chrome kurulu olmalı.
+  - Hepsi bu. İlk açılışta gerisini program kendi kurar
+    (bir dakika sürebilir ve ilk seferinde internet gerekir).
+
+
+------------------------------------------------------------
+ 1) UYGULAMAYI BAŞLATMA
+------------------------------------------------------------
+
+WINDOWS
+  - Çift tıkla:  run.bat
+  - Windows mavi bir "Windows bilgisayarınızı korudu" kutusu
+    çıkarırsa: "Ek bilgi" -> "Yine de çalıştır".
+
+macOS
+  - Çift tıkla:  run.command
+  - macOS "açılamıyor" derse: dosyaya sağ tıkla -> "Aç" -> "Aç"
+    (bir kez). Sonrasında çift tıklamak yeterli.
+
+LINUX
+  - Bu klasörde bir terminal aç ve şunları çalıştır:
+        chmod +x run.sh      (sadece ilk seferinde)
+        ./run.sh
+
+
+------------------------------------------------------------
+ 2) UYGULAMAYI KULLANMA (adım adım)
+------------------------------------------------------------
+
+  1. Platform seç: "Instagram" ya da "Twitter / X" butonuna tıkla.
+
+  2. ADIM 1 — Giriş
+       - "Open browser"a bas. Bir Chrome penceresi açılır.
+       - Hesabına giriş yap (2FA / kod sorunsuz, süre sınırı yok).
+       - Uygulamaya dön ve "I'm logged in -> Continue"ya bas.
+
+  3. ADIM 2 — Takipçiler
+       - Chrome penceresinde TAKİPÇİ LİSTENİ KENDİN AÇ:
+           Instagram : profilinde "followers"a tıkla, isimlerin
+                       olduğu açılır liste gelsin.
+           Twitter/X : takipçi sayfana git
+                       (x.com/<kullanıcı-adın>/followers).
+       - "I opened it -> Collect followers"a bas.
+       - Uygulama listeyi kaydırıp isimleri toplar. Bekle.
+
+  4. ADIM 3 — Takip edilenler
+       - Şimdi TAKİP ETTİKLERİN LİSTESİNİ aynı şekilde aç.
+       - "I opened it -> Collect following"e bas.
+
+  5. SONUÇ
+       - İki liste ekranda görünür.
+       - Ayrıca metin dosyası olarak şu klasöre kaydedilir:
+           result_instagram/   veya   result_twitter/
+
+
+------------------------------------------------------------
+ İPUÇLARI
+------------------------------------------------------------
+
+  - "Stop" veya "Back" her şeyi durdurur ve Chrome'u kapatır.
+  - Bir sonraki sefer için girişin hatırlanır.
+  - Liste "No users found" derse: Chrome'da listenin gerçekten
+    açık ve görünür olduğundan emin ol, sonra butona tekrar bas.
+  - Büyük hesaplarda toplama biraz sürer — listeyi sonuna kadar
+    kendi kaydırmasını bekle.
+
+  Not: Bu tür kazıma sitelerin kullanım şartlarına aykırıdır.
+  Kendi hesabınla, riskini bilerek kullan ve arka arkaya çok
+  çalıştırma.

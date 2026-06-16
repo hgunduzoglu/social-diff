@@ -119,11 +119,15 @@ def _hrefs_in(driver, css):
     return out
 
 
-def harvest(driver, extract_fn, scroll_fn, patience=12, pause=1.6, hard_limit=5000,
+def harvest(driver, extract_fn, scroll_fn, patience=8, pause=0.9, hard_limit=5000,
             log=print, should_stop=None):
     """extract_fn(driver) -> [handle...]; scroll_fn(driver) scrolls the list down.
        Stops when no new users appear for `patience` consecutive rounds, or as soon
-       as should_stop() returns True."""
+       as should_stop() returns True.
+
+       Adaptive timing: a productive round (new users) waits the full `pause` so
+       freshly scrolled-in rows can load; once we're in a no-new streak we're just
+       passing through already-seen rows, so we wait much less and move on fast."""
     seen = set()
     stale = 0
     rnd = 0
@@ -137,7 +141,7 @@ def harvest(driver, extract_fn, scroll_fn, patience=12, pause=1.6, hard_limit=50
                 seen.add(h)
         before = len(seen)
         scroll_fn(driver)
-        time.sleep(pause)
+        time.sleep(pause if stale == 0 else max(0.35, pause * 0.5))
         for h in extract_fn(driver):
             if h:
                 seen.add(h)
@@ -160,7 +164,11 @@ def scroll_ig(driver):
         }
       }
       target = target || dlg;
-      target.scrollTop = target.scrollHeight;
+      // Scroll by ~one viewport at a time, NOT straight to the bottom: the list
+      // is virtualized, so jumping to scrollHeight unmounts rows before we read
+      // them (that's the ~20-30 that go missing). Small steps capture every row.
+      const step = Math.max(200, target.clientHeight * 0.9);
+      target.scrollTop = target.scrollTop + step;
       return true;
     """)
 
@@ -266,7 +274,7 @@ def open_browser(platform, profile_dir="./chrome-profile", log=print):
     return driver
 
 
-def harvest_open_list(driver, platform, patience=12, pause=1.6, log=print,
+def harvest_open_list(driver, platform, patience=8, pause=0.9, log=print,
                       should_stop=None):
     """Collect handles from the followers/following list that is CURRENTLY open
        in the browser (the user opens it manually). Returns a sorted list."""

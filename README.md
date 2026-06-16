@@ -1,6 +1,6 @@
 # Social Diff
 
-**Türkçe**    [English](README.md) · 
+**Türkçe** · [English](README.en.md)
 
 Instagram ve Twitter/X için takipçi–takip karşılaştırması yapıp **iki yönlü
 eşleşmeme** listesi çıkarır:
@@ -10,15 +10,25 @@ eşleşmeme** listesi çıkarır:
 
 ## Nasıl çalışır?
 
+Program adım adım ilerler ve **gezinmeyi sen yaparsın** — o sadece açtığın
+listeyi kaydırıp toplar.
+
 1. Açılışta iki büyük buton görürsün: **Instagram** ve **Twitter / X**. Birine
    tıklayınca o platformun ekranı açılır.
-2. Kullanıcı adını yaz, **"Open browser"**'a bas → bir Chrome penceresi açılır,
-   **giriş'i sen yaparsın** (2FA / checkpoint dahil, süre sınırı yok).
-3. **"I'm logged in → Fetch lists"**'e bas → script profilini gezip takipçi/takip
-   listelerini kaydırarak toplar, karşılaştırır, sonucu ekranda gösterir ve
-   `.txt` dosyalarına kaydeder.
-4. İstediğin an **"Stop"** (veya **"Back"**) ile işlemi durdurabilirsin; bu Chrome
-   penceresini de kapatır.
+2. **Adım 1 – Giriş:** **"Open browser"**'a bas → bir Chrome penceresi açılır,
+   **giriş'i sen yaparsın** (2FA / checkpoint dahil, süre sınırı yok). Sonra
+   **"I'm logged in → Continue"**'a bas.
+3. **Adım 2 – Takipçiler:** Tarayıcıda **takipçi listeni aç** (Instagram'da
+   profilinde "followers"a tıkla; Twitter'da followers sayfana git), sonra
+   **"I opened it → Collect followers"**'a bas → program açık listeyi kaydırıp
+   toplar.
+4. **Adım 3 – Takip edilenler:** Aynı şekilde **takip ettiklerin listesini aç**,
+   sonra **"I opened it → Collect following"**'e bas.
+5. **Sonuç:** İki yönlü eşleşmeme ekranda gösterilir ve `result_<platform>/`
+   klasörüne `.txt` olarak kaydedilir.
+
+İstediğin an **"Stop"** (veya **"Back"**) ile işlemi durdurabilirsin; bu Chrome
+penceresini de kapatır.
 
 Giriş bilgisi yerel `chrome-profile/` klasöründe saklanır, böylece bir sonraki
 sefer zaten giriş yapmış olursun.
@@ -59,6 +69,7 @@ veya GitHub arayüzünden **Download ZIP** ile indirip aç.
 | `compare.py` | karşılaştırma mantığı (CLI olarak da çalışır) |
 | `run.command` / `run.bat` / `run.sh` | başlatıcılar (macOS / Windows / Linux) |
 | `build_windows.bat` / `build_mac.command` | tek dosyalık uygulama üret |
+| `Nasıl Kullanırım.txt` / `How To Use.txt` | sade kullanım kılavuzu (TR / EN) |
 
 ## Komut satırı (isteğe bağlı)
 

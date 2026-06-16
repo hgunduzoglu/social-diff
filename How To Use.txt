@@ -1,0 +1,79 @@
+============================================================
+ SOCIAL DIFF — HOW TO USE
+============================================================
+
+What it does:
+  Compares your followers and your following on Instagram and
+  Twitter/X, and shows two lists:
+    - Don't follow you back  (you follow them, they don't follow you)
+    - You don't follow back  (they follow you, you don't follow them)
+
+Before you start:
+  - Google Chrome must be installed.
+  - That's it. The first launch sets everything else up by itself
+    (it may take a minute and needs internet the first time).
+
+
+------------------------------------------------------------
+ 1) STARTING THE APP
+------------------------------------------------------------
+
+WINDOWS
+  - Double-click:  run.bat
+  - If Windows shows a blue "Windows protected your PC" box,
+    click "More info" -> "Run anyway".
+
+macOS
+  - Double-click:  run.command
+  - If macOS says it can't be opened: right-click the file ->
+    "Open" -> "Open" once. After that, double-click works.
+
+LINUX
+  - Open a terminal in this folder and run:
+        chmod +x run.sh      (only the first time)
+        ./run.sh
+
+
+------------------------------------------------------------
+ 2) USING THE APP (step by step)
+------------------------------------------------------------
+
+  1. Pick a platform: click "Instagram" or "Twitter / X".
+
+  2. STEP 1 — Log in
+       - Click "Open browser". A Chrome window opens.
+       - Log in to your account (2FA / code is fine, no time limit).
+       - Come back to the app and click "I'm logged in -> Continue".
+
+  3. STEP 2 — Followers
+       - In the Chrome window, OPEN YOUR FOLLOWERS LIST yourself:
+           Instagram : on your profile, click "followers" so the
+                       popup list of names opens.
+           Twitter/X : go to your followers page
+                       (x.com/<your-username>/followers).
+       - Click "I opened it -> Collect followers".
+       - The app scrolls the list and collects the names. Wait.
+
+  4. STEP 3 — Following
+       - Now OPEN YOUR FOLLOWING LIST the same way.
+       - Click "I opened it -> Collect following".
+
+  5. RESULT
+       - The two lists appear on screen.
+       - They are also saved as text files in the folder:
+           result_instagram/   or   result_twitter/
+
+
+------------------------------------------------------------
+ TIPS
+------------------------------------------------------------
+
+  - "Stop" or "Back" stops everything and closes the Chrome window.
+  - You stay logged in for next time (login is remembered).
+  - If a list says "No users found", make sure the list is actually
+    open and visible in Chrome, then click the button again.
+  - For big accounts, collecting takes a while — let it scroll to
+    the end on its own.
+
+  Note: scraping is against the sites' terms of service. Use your
+  own account, at your own risk, and don't run it many times in a row.
