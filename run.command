@@ -7,13 +7,14 @@ cd "$(dirname "$0")"
 echo "=== Social Diff ==="
 
 find_python() {
-  # Prefer an interpreter that actually has tkinter (pyenv builds often don't).
-  for cand in /usr/bin/python3 \
-              /opt/homebrew/bin/python3 \
+  # Need a Python with a MODERN Tk (>= 8.6). macOS system Tk is 8.5 and renders
+  # blank windows on recent macOS, so we explicitly reject it.
+  for cand in /opt/homebrew/bin/python3 \
               /usr/local/bin/python3 \
               /Library/Frameworks/Python.framework/Versions/Current/bin/python3 \
-              python3; do
-    if "$cand" -c "import tkinter" >/dev/null 2>&1; then
+              python3 \
+              /usr/bin/python3; do
+    if "$cand" -c "import sys,tkinter; sys.exit(0 if tkinter.TkVersion>=8.6 else 1)" >/dev/null 2>&1; then
       echo "$cand"; return 0
     fi
   done
@@ -22,9 +23,9 @@ find_python() {
 
 if [ ! -d ".venv" ]; then
   PY="$(find_python)" || {
-    echo "ERROR: No Python with tkinter found."
+    echo "ERROR: No Python with a modern Tk (>= 8.6) found."
     echo "Install it with:  brew install python-tk"
-    echo "(or use the python.org installer, which includes Tk)."
+    echo "(or use the python.org installer, which includes Tk 8.6)."
     read -n 1 -s -r -p "Press any key to close..."; exit 1
   }
   echo "Creating virtual environment with: $PY"

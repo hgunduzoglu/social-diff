@@ -93,7 +93,7 @@ class PlatformPanel(ttk.LabelFrame):
         self.go_btn.pack(side="left", padx=(8, 0))
 
         self.status_var = tk.StringVar(value="Idle.")
-        ttk.Label(self, textvariable=self.status_var, foreground="#555").pack(
+        ttk.Label(self, textvariable=self.status_var, style="Muted.TLabel").pack(
             anchor="w", pady=(6, 4))
 
         # --- body: log on the left, results on the right --------------------
@@ -105,7 +105,8 @@ class PlatformPanel(ttk.LabelFrame):
         ttk.Label(log_frame, text="Log").pack(anchor="w")
         self.log_text = scrolledtext.ScrolledText(
             log_frame, height=9, width=40, wrap="word", state="disabled",
-            font=("Menlo", 10))
+            font=FONT_MONO, bg=PANEL_BG, fg=FG, relief="solid", borderwidth=1,
+            highlightthickness=0)
         self.log_text.pack(fill="both", expand=True)
 
         res_frame = ttk.Frame(body)
@@ -130,7 +131,10 @@ class PlatformPanel(ttk.LabelFrame):
         frame.pack(fill="both", expand=True)
         sb = ttk.Scrollbar(frame, orient="vertical")
         lb = tk.Listbox(frame, height=9, width=22, yscrollcommand=sb.set,
-                        font=("Menlo", 10), activestyle="none")
+                        font=FONT_MONO, activestyle="none",
+                        bg=PANEL_BG, fg=FG, relief="solid", borderwidth=1,
+                        highlightthickness=0, selectbackground="#cfe8ff",
+                        selectforeground=FG)
         sb.config(command=lb.yview)
         sb.pack(side="right", fill="y")
         lb.pack(side="left", fill="both", expand=True)
@@ -254,12 +258,13 @@ def main():
     root.title("Social Diff - follower / following mismatch")
     root.geometry("900x720")
     root.minsize(760, 600)
+    apply_theme(root)
 
     header = ttk.Label(
         root,
         text=("Log in yourself in the browser (2FA included, no time limit), "
               "then click 'I'm logged in'."),
-        foreground="#444", padding=(12, 8))
+        style="Muted.TLabel", padding=(12, 8))
     header.pack(fill="x")
 
     ig = PlatformPanel(root, "instagram")

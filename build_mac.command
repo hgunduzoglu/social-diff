@@ -5,8 +5,10 @@ set -e
 cd "$(dirname "$0")"
 
 find_python() {
-  for cand in /usr/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3 python3; do
-    if "$cand" -c "import tkinter" >/dev/null 2>&1; then echo "$cand"; return 0; fi
+  for cand in /opt/homebrew/bin/python3 /usr/local/bin/python3 python3 /usr/bin/python3; do
+    if "$cand" -c "import sys,tkinter; sys.exit(0 if tkinter.TkVersion>=8.6 else 1)" >/dev/null 2>&1; then
+      echo "$cand"; return 0
+    fi
   done
   return 1
 }
